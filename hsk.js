@@ -1,7 +1,7 @@
 /* Блок «HSK 6 экзамен»: словарь 2500 слов HSK 6, игры, тренажёры по частям экзамена. Данные: hsk_words.json, hsk_exam.json */
 (function(){
 'use strict';
-const V='11';
+const V='12';
 let W=null,E=null,L6=[],BASE=[],loading=null,T=[],ACT={};
 let X={};try{X=JSON.parse(localStorage.getItem('hsk6x')||'{}')}catch(e){}
 X.b=X.b||{};X.d=X.d||{};X.xp=X.xp||0;X.rec=X.rec||{};X.pool=X.pool||'cur';if(X.pool==='base')X.pool='cur';X.days=X.days||{};X.sx=X.sx||{};
@@ -15,7 +15,14 @@ const EN=()=>S.en!==false;
 const C={w:'#2E5C8A',g:'#B0702A',e:'#8E1B1B',ok:'#3D7A4E',v:'#6B4C8F',t:'#2A7A7A'};
 function timer(f,ms){const t=setInterval(f,ms);T.push(t);return t}
 function stop(){T.forEach(clearInterval);T=[];try{speechSynthesis.cancel()}catch(e){}}
-function xp(n){X.xp+=n;const d=dn();X.days[d]=(X.days[d]||0)+n;sv()}
+const GOAL=30,RANKS=[[0,'学徒','ученик'],[100,'童生','школяр'],[300,'秀才','сюцай'],[700,'举人','цзюйжэнь'],[1500,'进士','цзиньши'],[3000,'探花','третий на экзамене'],[5000,'榜眼','второй на экзамене'],[8000,'状元','первый на экзамене']];
+const rank=x=>{let r=0;RANKS.forEach((k,i)=>{if(x>=k[0])r=i});return r};
+function xp(n){const d=dn(),a=X.days[d]||0,r0=rank(X.xp);X.xp+=n;X.days[d]=a+n;sv();
+ if(rank(X.xp)>r0){const k=RANKS[rank(X.xp)];toast('🎓 Новое звание: '+k[1]+' · '+k[2]);party()}
+ else if(a<GOAL&&a+n>=GOAL){toast('🎉 Цель дня выполнена: '+GOAL+' верных');party()}}
+let AC=null;function snd(ok){if(X.snd===false)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const t=AC.currentTime;(ok?[660,990]:[220,165]).forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type=ok?'sine':'triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,t+i*.09);g.gain.exponentialRampToValueAtTime(.001,t+i*.09+.16);o.connect(g);g.connect(AC.destination);o.start(t+i*.09);o.stop(t+i*.09+.17)});if(!ok&&navigator.vibrate)navigator.vibrate(60)}catch(e){}}
+function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),3200)}
+function party(){const b=document.createElement('div');b.className='party';const em=['🎉','⭐','🏮','🎊','✨','福'];for(let i=0;i<26;i++){const s=document.createElement('i');s.textContent=em[rnd(em.length)];s.style.left=rnd(100)+'%';s.style.animationDelay=(Math.random()*.8)+'s';s.style.fontSize=(16+rnd(18))+'px';b.appendChild(s)}document.body.appendChild(b);setTimeout(()=>b.remove(),3200)}
 function streak(){let d=dn(),n=0;if(!X.days[d])d--;while(X.days[d]){n++;d--}return n}
 function miss(w){if(w&&w.id){X.b[w.id]=0;X.d[w.id]=dn();sv()}}
 function put(h,keep){app.innerHTML=h;if(!keep)scrollTo(0,0)}
@@ -29,25 +36,35 @@ const css=document.createElement('style');css.textContent=`
 .stat{display:flex;gap:8px;text-align:center}.stat div{flex:1;background:#fff;border-radius:12px;padding:8px 4px}.stat b{display:block;font-size:calc(var(--k)*19px);color:#8E1B1B}.stat span{font-size:calc(var(--k)*11px);color:var(--mut)}
 .opt{display:block;width:100%;margin:8px 0;padding:12px;text-align:left;background:#fff;border:1px solid #cfd6de;border-radius:10px;font-size:calc(var(--k)*16px);color:var(--ink)}
 .opt.r{background:#E4F1E7;border-color:#3D7A4E}.opt.x{background:#FBEDED;border-color:#B4413C}
-.opt .oz{font-size:calc(var(--k)*21px);color:var(--red);font-weight:600}
+.opt .oz{font-size:calc(var(--k)*30px);color:var(--red);font-weight:600}
 .op{display:none;color:#8a8a8a;font-style:italic;font-size:calc(var(--k)*12px);font-weight:400}.done .op{display:block}
 .pairs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.pairs>div{display:flex;flex-direction:column;gap:8px}
 .pt{background:#fff;border:2px solid #dde2e8;border-radius:10px;min-height:62px;padding:6px;font-size:calc(var(--k)*13.5px);color:var(--ink)}
-.pt.z{font-size:calc(var(--k)*21px);color:var(--red);font-weight:600}.pt small{display:block;font-size:.5em;color:var(--mut);font-weight:400;font-style:italic}
+.pt.z{font-size:calc(var(--k)*30px);color:var(--red);font-weight:600}.pt small{display:block;font-size:.5em;color:var(--mut);font-weight:400;font-style:italic}
 .pt.sel{border-color:#2E5C8A;background:#EAF1F8}.pt.bad{border-color:#B4413C;background:#FBEDED}.pt.done{opacity:.25;border-color:#3D7A4E}
 .slots{min-height:54px;border-bottom:2px dashed #ccc;display:flex;flex-wrap:wrap;gap:6px;padding:6px 0;margin:10px 0}
 .tls{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
-.tl{background:#fff;border:2px solid #cfd6de;border-radius:10px;padding:8px 13px;font-size:calc(var(--k)*21px);color:var(--red);font-weight:600}
+.tl{background:#fff;border:2px solid #cfd6de;border-radius:10px;padding:8px 13px;font-size:calc(var(--k)*28px);color:var(--red);font-weight:600}
 .tl.used{visibility:hidden}.tl.on{border-color:#2E5C8A}
 .wr{display:flex;align-items:baseline;gap:8px;background:#fff;border-radius:10px;padding:8px 10px;margin:5px 0;border-left:4px solid #ddd}
 .wr.s1{border-left-color:#E0B040}.wr.s2{border-left-color:#3D7A4E}
-.wr .h{font-size:calc(var(--k)*20px);color:var(--red);font-weight:600;white-space:nowrap}.wr .m{flex:1;font-size:calc(var(--k)*13px)}
+.wr .h{font-size:calc(var(--k)*28px);color:var(--red);font-weight:600;white-space:nowrap}.wr .m{flex:1;font-size:calc(var(--k)*13px)}
 details.ref{background:#fff;border-radius:10px;padding:10px 12px;margin:6px 0;border-left:4px solid var(--c)}
-details.ref summary{font-weight:600;cursor:pointer}details.ref summary .zh{font-size:calc(var(--k)*19px);display:inline}
+details.ref summary{font-weight:600;cursor:pointer}details.ref summary .zh{font-size:calc(var(--k)*26px);display:inline}
 textarea{width:100%;min-height:240px;font:inherit;font-size:calc(var(--k)*17px);padding:10px;border-radius:10px;border:1px solid #ccc}
 .big{font-size:calc(var(--k)*30px);width:72px;height:72px}
 .tf{display:flex;gap:10px;margin-top:12px}.tf button{flex:1;padding:18px;border-radius:12px;font-size:calc(var(--k)*17px);font-weight:600;color:#fff}
 .para{margin:0 0 10px;font-size:calc(var(--k)*18px);text-indent:2em}
+.zh{font-size:calc(var(--k)*46px);line-height:1.2}.zh.xl{font-size:calc(var(--k)*68px);text-align:center;flex:1;margin:10px 0}
+.li .zh{font-size:calc(var(--k)*28px)}
+.brk{margin:10px 0;padding:8px 10px;background:#FFF8EC;border-radius:10px}.bk{margin:6px 0;font-size:calc(var(--k)*13.5px)}.bk .bh{font-size:calc(var(--k)*30px);color:var(--red);font-weight:700;margin-right:6px}
+.bk .rel{color:#666;font-size:calc(var(--k)*12.5px);margin-left:4px}.bk .rel b{color:var(--red);font-size:1.25em;font-weight:600}
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;z-index:50;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.3);max-width:90%;text-align:center}
+.party{position:fixed;inset:0;pointer-events:none;z-index:49;overflow:hidden}.party i{position:absolute;top:-40px;font-style:normal;animation:fall 2.4s linear forwards;color:#C22}
+@keyframes fall{to{transform:translateY(105vh) rotate(540deg)}}
+.wod .ru{font-size:calc(var(--k)*16px)}
+.wod{background:#fff;border-radius:14px;padding:12px 14px;margin:10px 0;border-top:5px solid #B0702A;text-align:center}
+.rk{background:#fff;border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;align-items:center;gap:12px}.rk .rz{font-size:calc(var(--k)*30px);font-weight:700;color:#8E1B1B}
 .blank{display:inline-block;min-width:3em;border-bottom:2px solid var(--red);text-align:center;color:var(--red);font-weight:700}
 `;document.head.appendChild(css);
 
@@ -69,9 +86,12 @@ function render(r){stop();ACT={};const i=r.indexOf(':'),n=i<0?r:r.slice(0,i),a=i
 document.addEventListener('click',e=>{const el=e.target.closest&&e.target.closest('[data-a],[data-n]');if(!el||!app.contains(el))return;
  if(el.dataset.n!==undefined)nav(el.dataset.n);else if(el.dataset.a==='back')history.back();else{const f=ACT[el.dataset.a];if(f)f(el,e)}});
 
-const wdet=w=>{const x=E.wx[w.h];return `<div class="py">${esc(w.p)}</div><div class="ru">${esc(w.ru)}</div>${EN()&&w.en?`<div class="en">${esc(w.en)}</div>`:''}`+
+function brk(w){const cs=[...w.h];let h='';cs.forEach((ch,i)=>{const c=E.chars[ch];if(!c)return;const rel=c[1].filter(r=>r[0]!==w.h).slice(0,2);const m=cs.length>1?c[0]:'';if(!m&&!rel.length)return;
+  h+=`<div class="bk"><span class="bh">${esc(ch)}</span><span class="py">${esc(cs.length===w.ps.length?w.ps[i]:'')}</span>${m?' — '+esc(m):''}${rel.length?`<div class="rel">слова с ним: ${rel.map(r=>`<b>${esc(r[0])}</b> ${esc(r[2])}`).join(' · ')}</div>`:''}</div>`});
+ return h?`<div class="brk"><div class="lbl">🧠 как запомнить: из чего состоит</div>${h}</div>`:''}
+const wdet=w=>{const x=E.wx[w.h];return `<div class="py" style="font-size:calc(var(--k)*18px)">${esc(w.p)}</div><div class="ru">${esc(w.ru)}</div>${EN()&&w.en?`<div class="en">${esc(w.en)}</div>`:''}`+brk(w)+
  (x?`${x.syn?`<div class="note syn">${esc(x.syn)}</div>`:''}${x.ant?`<div class="note ant">${esc(x.ant)}</div>`:''}${x.ex.length?`<div class="ex"><div class="lbl">примеры</div>${x.ex.map(e=>`<div class="exi"><div class="z">${hl(e[0],w.h)}</div><div class="pyl">${esc(e[2])}</div><div class="r">${esc(e[1])}</div></div>`).join('')}</div>`:''}`:'')};
-const wcard=w=>`<div class="zh" style="font-size:calc(var(--k)*26px)">${esc(w.h)}</div>`+wdet(w);
+const wcard=w=>`<div class="zh">${esc(w.h)}</div>`+wdet(w);
 const wrow=w=>`<div class="wr ${kn(w)?'s2':seen(w)?'s1':''}" data-a="w" data-h="${esc(w.h)}"><span class="h">${esc(w.h)}</span><span class="m"><span class="py">${esc(w.p)}</span> · ${esc(w.ru)}${EN()&&w.en?`<span class="en" style="display:block">${esc(w.en)}</span>`:''}</span></div>`;
 const topl=(t,c,r)=>`<div class="top"><span style="font-weight:600;color:${c}">${t}</span><span>${r||''}</span></div>`;
 const backBtn=(t)=>`<button class="ghost" data-a="back">${t||'← Назад'}</button>`;
@@ -81,11 +101,13 @@ VIEWS.hub=()=>{const k=L6.filter(kn).length,sn=L6.filter(seen).length,due=dueLis
  Object.keys(X.days).forEach(d=>{if(+d<dn()-400)delete X.days[d]});
  const g=(n,t,s,c,cls)=>`<button class="tile ${cls||''}" data-n="${n}" style="--c:${c}"><b>${t}</b><span>${s}</span></button>`;
  const rc=(k,u)=>X.rec[k]!==undefined?` · рекорд ${X.rec[k]}${u||''}`:'';
- const newLeft=setW(cs).filter(w=>!seen(w)).length;
- put(tabs()+`<div class="stat"><div><b>🔥 ${st}</b><span>дней подряд</span></div><div><b>${td}</b><span>верных сегодня</span></div><div><b>${k}</b><span>из 2500 слов HSK 6</span></div></div>
+ const rk=rank(X.xp),nxr=RANKS[rk+1],wd=L6[(dn()*37)%L6.length];
+ put(tabs()+`<div class="stat"><div><b>🔥 ${st}</b><span>дней подряд</span></div><div><b>${td>=GOAL?'✅ ':''}${td}<small style="font-size:.55em;color:#999">/${GOAL}</small></b><span>цель дня</span></div><div><b>${k}</b><span>из 2500 слов HSK 6</span></div></div>
  <div class="bar" style="margin:8px 2px"><i style="width:${(100*k/2500).toFixed(1)}%;background:#8E1B1B"></i></div>
+ <div class="rk"><span class="rz">${RANKS[rk][1]}</span><div style="flex:1"><div><b>Звание: ${RANKS[rk][2]}</b> · ⭐ ${X.xp}</div>${nxr?`<div class="n" style="font-size:calc(var(--k)*12px);color:#777">до «${nxr[1]}» осталось ${nxr[0]-X.xp} очков</div><div class="bar"><i style="width:${Math.round(100*(X.xp-RANKS[rk][0])/(nxr[0]-RANKS[rk][0]))}%;background:#B0702A"></i></div>`:'<div class="n">высшее звание!</div>'}</div></div>
  <div class="row"><button class="go" style="--c:#8E1B1B;flex:1;padding:13px" data-n="learn:${cs}">▶ Учить новые слова · набор ${cs+1}</button></div>
  <div class="row"><button class="go" style="--c:#3D7A4E;flex:1;padding:13px" data-n="review">🔁 Повторить, что пора · ${due}</button></div>
+ <div class="wod"><div class="lbl">слово дня</div><div style="display:flex;align-items:center;justify-content:center;gap:10px"><div class="zh" style="font-size:calc(var(--k)*56px)">${esc(wd.h)}</div><button class="spk" data-a="wod">🔊</button></div><div style="text-align:left">${wdet(wd)}</div></div>
  <div class="sec">📚 Слова</div><div class="tiles">
  ${g('sets','Наборы HSK 6','2500 слов · 50 наборов по 50, от частых к редким',C.w,'wide')}
  ${g('search','🔎 Поиск по словарю','2500 слов HSK 6: 汉字, pinyin, русский, English',C.w,'wide')}</div>
@@ -94,7 +116,7 @@ VIEWS.hub=()=>{const k=L6.filter(kn).length,sn=L6.filter(seen).length,due=dueLis
  <div class="tiles">${g('blitz','⚡ Блиц','20 слов, 8 секунд на ответ'+rc('blitz','/20'),C.g)}${g('pairs','🧩 Пары','соедините слово и перевод'+rc('pairs',' с'),C.g)}
  ${g('sprint','✅ Верно или нет','60 секунд на скорость'+rc('sprint'),C.g)}${g('tones','🎵 Тоны','выберите верный пиньинь'+rc('tones','/15'),C.g)}
  ${g('ear','👂 На слух','услышьте слово и найдите его'+rc('ear','/15'),C.g)}${g('wbuild','🔤 Собери слово','из иероглифов по переводу'+rc('wbuild','/10'),C.g)}
- ${g('sbuild','🧱 Собери фразу','расставьте части предложения'+rc('sbuild','/8'),C.g,'wide')}</div>
+ ${g('sbuild','🧱 Собери фразу','расставьте части'+rc('sbuild','/8'),C.g)}${g('lives','❤️ Три жизни','сколько слов до трёх ошибок'+rc('lives'),C.g)}</div>
  <div class="sec">🎓 Экзамен</div><div class="tiles">
  ${g('guide','📋 Как устроен HSK 6','части, время, баллы, план подготовки',C.e,'wide')}
  ${g('listen:a','听力 · Аудирование','текст на слух и вопрос'+rc('listen','/8'),C.e)}${g('listen:r','阅读 · Чтение','короткий текст и вопрос'+rc('read','/8'),C.e)}
@@ -102,19 +124,19 @@ VIEWS.hub=()=>{const k=L6.filter(kn).length,sn=L6.filter(seen).length,due=dueLis
  ${g('suoxie','缩写 · Изложение','прочитать, запомнить, пересказать',C.e)}${g('mock','⏱ Мини-экзамен','18 заданий из всех частей'+rc('mock','/18'),C.e)}
  ${g('grammar','Грамматика HSK 6',E.grammar.length+' конструкций с примерами',C.t)}${g('idioms','成语 · Чэнъюи',E.idioms.length+' выражений + игры',C.t)}
  ${g('syn','Похожие слова',E.syn.length+' пар: в чём разница',C.t,'wide')}</div>
- <div class="help">Всего очков: ⭐ ${X.xp}. Просмотрено слов HSK 6: ${sn}. Прогресс хранится в этом телефоне, блок работает без интернета.<br>🔊 Для звука нужен китайский голос синтеза речи (на Android — «Синтезатор речи Google», язык 中文).<br><span style="font-size:.9em">Список слов и переводы: открытый проект LiudmilaLV/json_hsk (chineseplus.club), порядок по частоте — complete-hsk-vocabulary.</span></div>`);
- bindTabs();ACT.pool=el=>{X.pool=el.dataset.p;sv();const y=scrollY;VIEWS.hub();scrollTo(0,y)}};
+ <div class="help"><button class="ghost" data-a="snd" style="float:right;margin-left:8px">${X.snd===false?'🔕 Звук выкл':'🔔 Звук вкл'}</button>Просмотрено слов HSK 6: ${sn}. Очки дают звания: 学徒 → 童生 → 秀才 → 举人 → 进士 → 探花 → 榜眼 → 状元. Прогресс хранится в этом телефоне, блок работает без интернета.<br>🔊 Для звука нужен китайский голос синтеза речи (на Android — «Синтезатор речи Google», язык 中文).<br><span style="font-size:.9em">Список слов и переводы: открытый проект LiudmilaLV/json_hsk (chineseplus.club), порядок по частоте — complete-hsk-vocabulary.</span></div>`);
+ bindTabs();ACT.wod=()=>say(wd.h);ACT.snd=()=>{X.snd=X.snd===false;sv();const y=scrollY;VIEWS.hub();scrollTo(0,y)};ACT.pool=el=>{X.pool=el.dataset.p;sv();const y=scrollY;VIEWS.hub();scrollTo(0,y)}};
 
 /* ── карточки: новые слова и повторение */
 function cards(list,title,color){let q=list.slice(),cur=null,shown=false,n=0;
  function nx(){if(!q.length){put(`<div class="card" style="text-align:center;min-height:auto"><div class="zh">太好了！</div><p>${n?'Готово: '+n+' карточек.':'Здесь пока нечего учить.'}</p><div class="row" style="justify-content:center">${backBtn()}</div></div>`);return}cur=q.shift();shown=false;dr()}
  function dr(){const w=cur,isNew=!seen(w);
   put(topl(title,color,'осталось '+(q.length+1))+`<div class="card" style="--c:${color}"><div class="lbl">${isNew?'новое слово':'вспомните перевод'}</div>
-  <div style="display:flex;align-items:center;gap:10px"><div class="zh">${esc(w.h)}</div><button class="spk" data-a="spk">🔊</button></div>${isNew||shown?wdet(w):'<div class="hint">как читается и что значит?</div>'}</div>
+  <div style="display:flex;align-items:center;gap:10px"><div class="zh xl">${esc(w.h)}</div><button class="spk" data-a="spk">🔊</button></div>${isNew||shown?wdet(w):'<div class="hint">как читается и что значит?</div>'}</div>
   <div class="ans">${isNew?`<button class="show" style="--c:${color}" data-a="mem">Дальше →</button>`:shown?`<button class="no" data-a="no">Не знаю</button><button class="ok" data-a="ok">Знаю</button>`:`<button class="show" style="--c:${color}" data-a="sh">Показать</button>`}</div>`)}
  ACT.spk=()=>say(cur.h);ACT.sh=()=>{shown=true;dr()};
  ACT.mem=()=>{X.b[cur.id]=0;X.d[cur.id]=dn();sv();q.push(cur);nx()};
- ACT.ok=()=>{const b=Math.min((X.b[cur.id]||0)+1,5);X.b[cur.id]=b;X.d[cur.id]=dn()+GAPS[b];n++;xp(1);nx()};
+ ACT.ok=()=>{snd(true);const b=Math.min((X.b[cur.id]||0)+1,5);X.b[cur.id]=b;X.d[cur.id]=dn()+GAPS[b];n++;xp(1);nx()};
  ACT.no=()=>{X.b[cur.id]=0;X.d[cur.id]=dn();sv();q.splice(Math.min(3,q.length),0,cur);nx()};
  nx()}
 VIEWS.learn=a=>{const n=+a||0,ws=setW(n),fresh=ws.filter(w=>!seen(w)).slice(0,10);
@@ -139,9 +161,9 @@ VIEWS.search=()=>{put(`<input type="search" id="hq" placeholder="汉字, pinyin 
  q.oninput=run;run();q.focus()};
 
 /* ── общий движок вопросов с вариантами */
-function quiz(c){let i=0,ok=0,wrong=[],left=0;const so={},sn={};
- function dr(){stop();const q=c.qs[i];if(!q)return end();
-  put(topl(c.title+' · '+(i+1)+'/'+c.qs.length,c.color,'✓ '+ok+(c.time?` · <b id="tm">${c.time}</b> с`:''))+(c.time?`<div class="bar"><i id="tb" style="width:100%;background:${c.color};transition:width 1s linear"></i></div>`:'')+
+function quiz(c){let i=0,ok=0,wrong=[],left=0,lives=c.lives||0;const so={},sn={};
+ function dr(){stop();const q=c.qs[i];if(!q||(c.lives&&lives<=0))return end();
+  put(topl(c.title+(c.lives?'':' · '+(i+1)+'/'+c.qs.length),c.color,(c.lives?'❤️'.repeat(lives)+' · ':'')+'✓ '+ok+(c.time?` · <b id="tm">${c.time}</b> с`:''))+(c.time?`<div class="bar"><i id="tb" style="width:100%;background:${c.color};transition:width 1s linear"></i></div>`:'')+
   `<div class="card" style="--c:${c.color};min-height:auto">${q.q}</div><div id="opts">${q.opts.map((o,k)=>`<button class="opt" data-a="o" data-k="${k}">${o}</button>`).join('')}</div><div id="exp"></div>`);
   ACT.o=el=>ans(+el.dataset.k);ACT.say=()=>say(q.say||q.say0);
   if(q.say)setTimeout(()=>say(q.say),300);
@@ -149,11 +171,11 @@ function quiz(c){let i=0,ok=0,wrong=[],left=0;const so={},sn={};
  function ans(k){T.forEach(clearInterval);T=[];const q=c.qs[i];ACT.o=null;const box=document.getElementById('opts');box.classList.add('done');
   box.querySelectorAll('.opt').forEach((b,j)=>{if(j===q.a)b.classList.add('r');else if(j===k)b.classList.add('x')});
   if(q.sec)sn[q.sec]=(sn[q.sec]||0)+1;
-  if(k===q.a){ok++;xp(1);if(q.sec)so[q.sec]=(so[q.sec]||0)+1}else{wrong.push(q);miss(q.w)}
-  const ex=document.getElementById('exp');ex.innerHTML=`<div class="card" style="--c:${k===q.a?C.ok:'#B4413C'};min-height:auto;margin-top:8px"><div class="lbl" style="color:${k===q.a?C.ok:'#B4413C'}">${k===q.a?'верно':k<0?'время вышло':'неверно'}</div>${q.ex||''}<button class="go" style="--c:${c.color};width:100%;margin-top:10px;padding:12px" data-a="nx">${i+1<c.qs.length?'Дальше →':'Итог'}</button></div>`;
+  if(k===q.a){ok++;snd(true);xp(1);if(q.sec)so[q.sec]=(so[q.sec]||0)+1}else{snd(false);lives--;wrong.push(q);miss(q.w)}
+  const ex=document.getElementById('exp');ex.innerHTML=`<div class="card" style="--c:${k===q.a?C.ok:'#B4413C'};min-height:auto;margin-top:8px"><div class="lbl" style="color:${k===q.a?C.ok:'#B4413C'}">${k===q.a?'верно':k<0?'время вышло':'неверно'}</div>${q.ex||''}<button class="go" style="--c:${c.color};width:100%;margin-top:10px;padding:12px" data-a="nx">${i+1<c.qs.length&&!(c.lives&&lives<=0)?'Дальше →':'Итог'}</button></div>`;
   ACT.nx=()=>{i++;dr()};ex.scrollIntoView({block:'nearest'})}
- function end(){stop();const n=c.qs.length,p=n?Math.round(100*ok/n):0,nr=n&&best(c.key,ok);
-  put(`<div class="card" style="text-align:center;min-height:auto;--c:${c.color}"><div class="zh">${p>=80?'太棒了！':p>=50?'不错！':'加油！'}</div><div class="ru">${ok} из ${n} · ${p}%</div>${nr&&ok?'<div class="lbl">🏆 новый рекорд</div>':''}
+ function end(){stop();const n=c.qs.length,p=c.lives?(ok>=15?90:ok>=7?60:0):n?Math.round(100*ok/n):0,nr=n&&best(c.key,ok);if(p>=80||(nr&&ok>2))party();
+  put(`<div class="card" style="text-align:center;min-height:auto;--c:${c.color}"><div class="zh">${p>=80?'太棒了！':p>=50?'不错！':'加油！'}</div><div class="ru">${c.lives?ok+' верных подряд до трёх ошибок':ok+' из '+n+' · '+p+'%'}</div>${nr&&ok?'<div class="lbl">🏆 новый рекорд</div>':''}
   ${Object.keys(sn).length?`<div style="text-align:left;margin:10px 0">${Object.keys(sn).map(s=>`<div>${s}: <b>${so[s]||0} из ${sn[s]}</b></div>`).join('')}</div>`:''}
   ${wrong.length?`<div class="lbl" style="margin-top:12px">ошибки${wrong.some(q=>q.w)?' — слова добавлены в повторение':''}</div>${wrong.map(q=>`<div class="li" style="--c:${c.color};text-align:left">${q.sum||q.ex||''}</div>`).join('')}`:''}
   <div class="row" style="justify-content:center;margin-top:12px"><button class="go" style="--c:${c.color}" data-a="again">Ещё раз</button>${backBtn()}</div></div>`);
@@ -163,6 +185,7 @@ const sumw=w=>`<span class="zh">${esc(w.h)}</span> <span class="py">${esc(w.p)}<
 function qWord(w,P,dir){const o=shuf([w].concat(pick(P.filter(x=>x.id!==w.id&&x.ru!==w.ru&&x.h!==w.h),3)));
  return{q:dir==='zr'?`<div class="lbl">что значит?</div><div class="zh">${esc(w.h)}</div><div class="py">${esc(w.p)}</div>`:`<div class="lbl">как по-китайски?</div><div class="ru">${esc(w.ru)}</div>${EN()&&w.en?`<div class="en">${esc(w.en)}</div>`:''}`,
   opts:o.map(x=>dir==='zr'?esc(x.ru):`<span class="oz">${esc(x.h)}</span> <span class="py">${esc(x.p)}</span>`),a:o.indexOf(w),ex:wcard(w),sum:sumw(w),w:w}}
+VIEWS.lives=()=>{const P=pool();const mk=()=>quiz({title:'❤️ Три жизни · '+poolName(),color:C.g,key:'lives',time:8,lives:3,qs:shuf(P).concat(shuf(P)).slice(0,80).map(w=>qWord(w,P,Math.random()<.5?'zr':'rz')),again:mk});mk()};
 VIEWS.blitz=a=>{let P,t;if(a&&a[0]==='b'){P=BASE.filter(w=>w.l===+a[1]);t='HSK '+a[1]}else if(a!==''){P=setW(+a);t='набор '+(+a+1)}else{P=pool();t=poolName()}
  const mk=()=>quiz({title:'⚡ Блиц · '+t,color:C.g,key:a?'blitz_'+a:'blitz',time:8,qs:pick(P,20).map(w=>qWord(w,P,Math.random()<.5?'zr':'rz')),again:mk});mk()};
 const TM={a:'āáǎà',e:'ēéěè',i:'īíǐì',o:'ōóǒò',u:'ūúǔù','ü':'ǖǘǚǜ'},TR=/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/;
@@ -185,8 +208,8 @@ VIEWS.pairs=()=>{const P=pool();let round=0,err=0,sel=null,left=0;const t0=Date.
  timer(()=>{const e=document.getElementById('pt');if(e)e.textContent=Math.round((Date.now()-t0)/1000)},1000);
  ACT.p=el=>{if(el.classList.contains('done'))return;if(el.dataset.s==='l')say(el.firstChild.textContent);
   if(!sel||sel.dataset.s===el.dataset.s){if(sel)sel.classList.remove('sel');sel=el;el.classList.add('sel');return}
-  const s=sel;sel=null;if(s.dataset.id===el.dataset.id){s.classList.remove('sel');s.classList.add('done');el.classList.add('done');xp(1);if(!--left){round++;if(round<R)setTimeout(rd,350);else fin()}}
-  else{err++;el.classList.add('bad');s.classList.add('bad');miss(W.find(w=>w.id==s.dataset.id));setTimeout(()=>{el.classList.remove('bad');s.classList.remove('bad','sel')},450)}};
+  const s=sel;sel=null;if(s.dataset.id===el.dataset.id){s.classList.remove('sel');s.classList.add('done');el.classList.add('done');snd(true);xp(1);if(!--left){round++;if(round<R)setTimeout(rd,350);else fin()}}
+  else{err++;snd(false);el.classList.add('bad');s.classList.add('bad');miss(W.find(w=>w.id==s.dataset.id));setTimeout(()=>{el.classList.remove('bad');s.classList.remove('bad','sel')},450)}};
  function fin(){stop();const sec=Math.round((Date.now()-t0)/1000)+err*3,nr=best('pairs',sec,true);
   put(`<div class="card" style="text-align:center;min-height:auto;--c:${C.g}"><div class="zh">${err?'不错！':'太棒了！'}</div><div class="ru">${sec} с</div><p>ошибок: ${err} (каждая +3 с)${nr?'<br>🏆 новый рекорд':'<br>рекорд: '+X.rec.pairs+' с'}</p><div class="row" style="justify-content:center"><button class="go" style="--c:${C.g}" data-a="again">Ещё раз</button>${backBtn()}</div></div>`);
   ACT.again=()=>{ACT={};VIEWS.pairs()}}
@@ -198,7 +221,7 @@ VIEWS.sprint=()=>{const P=pool();let score=0,combo=0,left=60,cur=null,bad=[],loc
  function dr(fb){put(topl('✅ Верно или нет · '+poolName(),C.g,'⭐ '+score+(combo>2?' · серия '+combo:'')+' · <b id="st">'+left+'</b> с')+`<div class="bar"><i id="sb" style="width:${100*left/60}%;background:${C.g};transition:width 1s linear"></i></div>
   <div class="card" style="--c:${C.g};min-height:auto;text-align:center"><div class="zh">${esc(cur.w.h)}</div><div class="py">${esc(cur.w.p)}</div><div class="ru" style="margin-top:14px">${esc(cur.o.ru)}</div>${fb||''}</div>
   <div class="tf"><button style="background:#B4413C" data-a="f">✗ Неверно</button><button style="background:#3D7A4E" data-a="t">✓ Верно</button></div>`,true)}
- function ans(v){if(lock)return;if(v===cur.t){score++;combo++;xp(1);nx()}else{combo=0;bad.push(cur.w);miss(cur.w);lock=true;dr(`<div class="note ant" style="margin-top:12px">на самом деле: ${esc(cur.w.ru)}</div>`);setTimeout(()=>{lock=false;if(left>0)nx()},1100)}}
+ function ans(v){if(lock)return;if(v===cur.t){score++;combo++;snd(true);xp(1);nx()}else{combo=0;snd(false);bad.push(cur.w);miss(cur.w);lock=true;dr(`<div class="note ant" style="margin-top:12px">на самом деле: ${esc(cur.w.ru)}</div>`);setTimeout(()=>{lock=false;if(left>0)nx()},1100)}}
  ACT.t=()=>ans(true);ACT.f=()=>ans(false);
  timer(()=>{left--;const e=document.getElementById('st'),b=document.getElementById('sb');if(e)e.textContent=left;if(b)b.style.width=(100*left/60)+'%';if(left<=0)fin()},1000);
  function fin(){stop();ACT.t=ACT.f=null;const nr=best('sprint',score);
@@ -215,7 +238,7 @@ function tiles(c){let i=0,ok=0,sel=[],pl=[],state=0;
   <div class="slots">${sel.map((s,j)=>`<button class="tl on" data-a="un" data-j="${j}">${esc(s.t)}</button>`).join('')}</div>
   ${state?`<div class="lbl" style="color:${state===1?C.ok:'#B4413C'}">${state===1?'верно':'правильно так'}</div>${it.after}<button class="go" style="--c:${c.color};width:100%;margin-top:10px;padding:12px" data-a="nx">${i+1<c.items.length?'Дальше →':'Итог'}</button>`:''}</div>
   ${state?'':`<div class="tls">${pl.map(p=>`<button class="tl${p.used?' used':''}" data-a="add" data-k="${p.k}">${esc(p.t)}</button>`).join('')}</div><div class="row" style="justify-content:center"><button class="ghost" data-a="clr">Сбросить</button><button class="ghost" data-a="dk">Не знаю</button></div>`}`,keep)}
- function chk(right){const it=c.items[i];state=right?1:2;if(right){ok++;xp(2)}else miss(it.w);if(it.say)say(it.say);paint(true)}
+ function chk(right){const it=c.items[i];state=right?1:2;snd(right);if(right){ok++;xp(2)}else miss(it.w);if(it.say)say(it.say);paint(true)}
  ACT.add=el=>{if(state)return;const p=pl[+el.dataset.k];if(p.used)return;p.used=true;sel.push(p);const it=c.items[i];if(sel.length>=it.parts.length)chk(sel.map(s=>s.t).join('')===it.answer);else paint(true)};
  ACT.un=el=>{if(state)return;const p=sel.splice(+el.dataset.j,1)[0];p.used=false;paint(true)};
  ACT.clr=()=>{sel.forEach(p=>p.used=false);sel=[];paint(true)};ACT.dk=()=>chk(false);ACT.nx=()=>{i++;st()};
