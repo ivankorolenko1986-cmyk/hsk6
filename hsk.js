@@ -1,7 +1,7 @@
 /* Блок «HSK 6 экзамен»: словарь 2500 слов HSK 6, игры, тренажёры по частям экзамена. Данные: hsk_words.json, hsk_exam.json */
 (function(){
 'use strict';
-const V='12';
+const V='13';
 let W=null,E=null,L6=[],BASE=[],loading=null,T=[],ACT={};
 let X={};try{X=JSON.parse(localStorage.getItem('hsk6x')||'{}')}catch(e){}
 X.b=X.b||{};X.d=X.d||{};X.xp=X.xp||0;X.rec=X.rec||{};X.pool=X.pool||'cur';if(X.pool==='base')X.pool='cur';X.days=X.days||{};X.sx=X.sx||{};
@@ -62,6 +62,7 @@ textarea{width:100%;min-height:240px;font:inherit;font-size:calc(var(--k)*17px);
 .toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;z-index:50;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.3);max-width:90%;text-align:center}
 .party{position:fixed;inset:0;pointer-events:none;z-index:49;overflow:hidden}.party i{position:absolute;top:-40px;font-style:normal;animation:fall 2.4s linear forwards;color:#C22}
 @keyframes fall{to{transform:translateY(105vh) rotate(540deg)}}
+.emo{font-size:calc(var(--k)*64px);line-height:1.1;text-align:center}.emo.s{font-size:calc(var(--k)*34px);display:inline-block;vertical-align:middle;margin-left:10px}.wr .we{font-size:calc(var(--k)*24px)}
 .wod .ru{font-size:calc(var(--k)*16px)}
 .wod{background:#fff;border-radius:14px;padding:12px 14px;margin:10px 0;border-top:5px solid #B0702A;text-align:center}
 .rk{background:#fff;border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;align-items:center;gap:12px}.rk .rz{font-size:calc(var(--k)*30px);font-weight:700;color:#8E1B1B}
@@ -70,7 +71,7 @@ textarea{width:100%;min-height:240px;font:inherit;font-size:calc(var(--k)*17px);
 
 function load(){if(W)return Promise.resolve();
  if(!loading)loading=Promise.all(['hsk_words.json','hsk_exam.json'].map(f=>fetch(f+'?v='+V).then(r=>{if(!r.ok)throw 0;return r.json()}))).then(([w,e])=>{
-  W=w.map(r=>({id:r[0],h:r[1],ps:r[2].split(' '),p:r[2].replace(/ /g,''),ru:r[3],en:r[4],l:r[5]}));E=e;L6=W.filter(x=>x.l===6);BASE=W.filter(x=>x.l<6)}).catch(e=>{loading=null;throw e});
+  W=w.map(r=>({id:r[0],h:r[1],ps:r[2].split(' '),p:r[2].replace(/ /g,''),ru:r[3],en:r[4],l:r[5],e:r[6]||''}));E=e;L6=W.filter(x=>x.l===6);BASE=W.filter(x=>x.l<6)}).catch(e=>{loading=null;throw e});
  return loading}
 const setW=n=>L6.slice(n*SZ,(n+1)*SZ);
 const seen=w=>X.b[w.id]!==undefined, kn=w=>X.b[w.id]>=1;
@@ -91,8 +92,8 @@ function brk(w){const cs=[...w.h];let h='';cs.forEach((ch,i)=>{const c=E.chars[c
  return h?`<div class="brk"><div class="lbl">🧠 как запомнить: из чего состоит</div>${h}</div>`:''}
 const wdet=w=>{const x=E.wx[w.h];return `<div class="py" style="font-size:calc(var(--k)*18px)">${esc(w.p)}</div><div class="ru">${esc(w.ru)}</div>${EN()&&w.en?`<div class="en">${esc(w.en)}</div>`:''}`+brk(w)+
  (x?`${x.syn?`<div class="note syn">${esc(x.syn)}</div>`:''}${x.ant?`<div class="note ant">${esc(x.ant)}</div>`:''}${x.ex.length?`<div class="ex"><div class="lbl">примеры</div>${x.ex.map(e=>`<div class="exi"><div class="z">${hl(e[0],w.h)}</div><div class="pyl">${esc(e[2])}</div><div class="r">${esc(e[1])}</div></div>`).join('')}</div>`:''}`:'')};
-const wcard=w=>`<div class="zh">${esc(w.h)}</div>`+wdet(w);
-const wrow=w=>`<div class="wr ${kn(w)?'s2':seen(w)?'s1':''}" data-a="w" data-h="${esc(w.h)}"><span class="h">${esc(w.h)}</span><span class="m"><span class="py">${esc(w.p)}</span> · ${esc(w.ru)}${EN()&&w.en?`<span class="en" style="display:block">${esc(w.en)}</span>`:''}</span></div>`;
+const wcard=w=>`<div class="zh">${esc(w.h)}<span class="emo s">${w.e}</span></div>`+wdet(w);
+const wrow=w=>`<div class="wr ${kn(w)?'s2':seen(w)?'s1':''}" data-a="w" data-h="${esc(w.h)}"><span class="h">${esc(w.h)}</span><span class="we">${w.e}</span><span class="m"><span class="py">${esc(w.p)}</span> · ${esc(w.ru)}${EN()&&w.en?`<span class="en" style="display:block">${esc(w.en)}</span>`:''}</span></div>`;
 const topl=(t,c,r)=>`<div class="top"><span style="font-weight:600;color:${c}">${t}</span><span>${r||''}</span></div>`;
 const backBtn=(t)=>`<button class="ghost" data-a="back">${t||'← Назад'}</button>`;
 
@@ -107,7 +108,7 @@ VIEWS.hub=()=>{const k=L6.filter(kn).length,sn=L6.filter(seen).length,due=dueLis
  <div class="rk"><span class="rz">${RANKS[rk][1]}</span><div style="flex:1"><div><b>Звание: ${RANKS[rk][2]}</b> · ⭐ ${X.xp}</div>${nxr?`<div class="n" style="font-size:calc(var(--k)*12px);color:#777">до «${nxr[1]}» осталось ${nxr[0]-X.xp} очков</div><div class="bar"><i style="width:${Math.round(100*(X.xp-RANKS[rk][0])/(nxr[0]-RANKS[rk][0]))}%;background:#B0702A"></i></div>`:'<div class="n">высшее звание!</div>'}</div></div>
  <div class="row"><button class="go" style="--c:#8E1B1B;flex:1;padding:13px" data-n="learn:${cs}">▶ Учить новые слова · набор ${cs+1}</button></div>
  <div class="row"><button class="go" style="--c:#3D7A4E;flex:1;padding:13px" data-n="review">🔁 Повторить, что пора · ${due}</button></div>
- <div class="wod"><div class="lbl">слово дня</div><div style="display:flex;align-items:center;justify-content:center;gap:10px"><div class="zh" style="font-size:calc(var(--k)*56px)">${esc(wd.h)}</div><button class="spk" data-a="wod">🔊</button></div><div style="text-align:left">${wdet(wd)}</div></div>
+ <div class="wod"><div class="lbl">слово дня</div><div class="emo">${wd.e}</div><div style="display:flex;align-items:center;justify-content:center;gap:10px"><div class="zh" style="font-size:calc(var(--k)*56px)">${esc(wd.h)}</div><button class="spk" data-a="wod">🔊</button></div><div style="text-align:left">${wdet(wd)}</div></div>
  <div class="sec">📚 Слова</div><div class="tiles">
  ${g('sets','Наборы HSK 6','2500 слов · 50 наборов по 50, от частых к редким',C.w,'wide')}
  ${g('search','🔎 Поиск по словарю','2500 слов HSK 6: 汉字, pinyin, русский, English',C.w,'wide')}</div>
@@ -116,7 +117,7 @@ VIEWS.hub=()=>{const k=L6.filter(kn).length,sn=L6.filter(seen).length,due=dueLis
  <div class="tiles">${g('blitz','⚡ Блиц','20 слов, 8 секунд на ответ'+rc('blitz','/20'),C.g)}${g('pairs','🧩 Пары','соедините слово и перевод'+rc('pairs',' с'),C.g)}
  ${g('sprint','✅ Верно или нет','60 секунд на скорость'+rc('sprint'),C.g)}${g('tones','🎵 Тоны','выберите верный пиньинь'+rc('tones','/15'),C.g)}
  ${g('ear','👂 На слух','услышьте слово и найдите его'+rc('ear','/15'),C.g)}${g('wbuild','🔤 Собери слово','из иероглифов по переводу'+rc('wbuild','/10'),C.g)}
- ${g('sbuild','🧱 Собери фразу','расставьте части'+rc('sbuild','/8'),C.g)}${g('lives','❤️ Три жизни','сколько слов до трёх ошибок'+rc('lives'),C.g)}</div>
+ ${g('sbuild','🧱 Собери фразу','расставьте части'+rc('sbuild','/8'),C.g)}${g('pic','🖼 Картинка','слово по картинке'+rc('pic','/15'),C.g)}${g('lives','❤️ Три жизни','сколько слов до трёх ошибок'+rc('lives'),C.g,'wide')}</div>
  <div class="sec">🎓 Экзамен</div><div class="tiles">
  ${g('guide','📋 Как устроен HSK 6','части, время, баллы, план подготовки',C.e,'wide')}
  ${g('listen:a','听力 · Аудирование','текст на слух и вопрос'+rc('listen','/8'),C.e)}${g('listen:r','阅读 · Чтение','короткий текст и вопрос'+rc('read','/8'),C.e)}
@@ -132,7 +133,7 @@ function cards(list,title,color){let q=list.slice(),cur=null,shown=false,n=0;
  function nx(){if(!q.length){put(`<div class="card" style="text-align:center;min-height:auto"><div class="zh">太好了！</div><p>${n?'Готово: '+n+' карточек.':'Здесь пока нечего учить.'}</p><div class="row" style="justify-content:center">${backBtn()}</div></div>`);return}cur=q.shift();shown=false;dr()}
  function dr(){const w=cur,isNew=!seen(w);
   put(topl(title,color,'осталось '+(q.length+1))+`<div class="card" style="--c:${color}"><div class="lbl">${isNew?'новое слово':'вспомните перевод'}</div>
-  <div style="display:flex;align-items:center;gap:10px"><div class="zh xl">${esc(w.h)}</div><button class="spk" data-a="spk">🔊</button></div>${isNew||shown?wdet(w):'<div class="hint">как читается и что значит?</div>'}</div>
+  <div class="emo">${w.e}</div><div style="display:flex;align-items:center;gap:10px"><div class="zh xl" style="margin-top:0">${esc(w.h)}</div><button class="spk" data-a="spk">🔊</button></div>${isNew||shown?wdet(w):'<div class="hint">как читается и что значит?</div>'}</div>
   <div class="ans">${isNew?`<button class="show" style="--c:${color}" data-a="mem">Дальше →</button>`:shown?`<button class="no" data-a="no">Не знаю</button><button class="ok" data-a="ok">Знаю</button>`:`<button class="show" style="--c:${color}" data-a="sh">Показать</button>`}</div>`)}
  ACT.spk=()=>say(cur.h);ACT.sh=()=>{shown=true;dr()};
  ACT.mem=()=>{X.b[cur.id]=0;X.d[cur.id]=dn();sv();q.push(cur);nx()};
@@ -183,8 +184,10 @@ function quiz(c){let i=0,ok=0,wrong=[],left=0,lives=c.lives||0;const so={},sn={}
  dr()}
 const sumw=w=>`<span class="zh">${esc(w.h)}</span> <span class="py">${esc(w.p)}</span><div class="ru" style="display:block">${esc(w.ru)}</div>`;
 function qWord(w,P,dir){const o=shuf([w].concat(pick(P.filter(x=>x.id!==w.id&&x.ru!==w.ru&&x.h!==w.h),3)));
- return{q:dir==='zr'?`<div class="lbl">что значит?</div><div class="zh">${esc(w.h)}</div><div class="py">${esc(w.p)}</div>`:`<div class="lbl">как по-китайски?</div><div class="ru">${esc(w.ru)}</div>${EN()&&w.en?`<div class="en">${esc(w.en)}</div>`:''}`,
+ return{q:dir==='zr'?`<div class="lbl">что значит?</div><div class="zh">${esc(w.h)}</div><div class="py">${esc(w.p)}</div>`:`<div class="lbl">как по-китайски?</div><div class="emo">${w.e}</div><div class="ru">${esc(w.ru)}</div>${EN()&&w.en?`<div class="en">${esc(w.en)}</div>`:''}`,
   opts:o.map(x=>dir==='zr'?esc(x.ru):`<span class="oz">${esc(x.h)}</span> <span class="py">${esc(x.p)}</span>`),a:o.indexOf(w),ex:wcard(w),sum:sumw(w),w:w}}
+VIEWS.pic=()=>{const P=pool().filter(w=>w.e);const mk=()=>quiz({title:'🖼 Картинка · '+poolName(),color:C.g,key:'pic',again:mk,qs:pick(P,15).map(w=>{const o=shuf([w].concat(pick(P.filter(x=>x.id!==w.id&&x.ru!==w.ru&&x.e!==w.e),3)));
+ return{q:`<div class="lbl">какое слово на картинке?</div><div class="emo" style="font-size:calc(var(--k)*90px)">${w.e}</div><div class="rs" style="text-align:center">${esc(w.ru.split(';')[0])}</div>`,opts:o.map(x=>`<span class="oz">${esc(x.h)}</span><span class="op">${esc(x.p)} · ${esc(x.ru)}</span>`),a:o.indexOf(w),ex:wcard(w),sum:sumw(w),w:w}})});mk()};
 VIEWS.lives=()=>{const P=pool();const mk=()=>quiz({title:'❤️ Три жизни · '+poolName(),color:C.g,key:'lives',time:8,lives:3,qs:shuf(P).concat(shuf(P)).slice(0,80).map(w=>qWord(w,P,Math.random()<.5?'zr':'rz')),again:mk});mk()};
 VIEWS.blitz=a=>{let P,t;if(a&&a[0]==='b'){P=BASE.filter(w=>w.l===+a[1]);t='HSK '+a[1]}else if(a!==''){P=setW(+a);t='набор '+(+a+1)}else{P=pool();t=poolName()}
  const mk=()=>quiz({title:'⚡ Блиц · '+t,color:C.g,key:a?'blitz_'+a:'blitz',time:8,qs:pick(P,20).map(w=>qWord(w,P,Math.random()<.5?'zr':'rz')),again:mk});mk()};
@@ -204,7 +207,7 @@ VIEWS.ear=()=>{const P=pool();
 VIEWS.pairs=()=>{const P=pool();let round=0,err=0,sel=null,left=0;const t0=Date.now();const R=3;
  const sh=s=>{s=s.split(';')[0];return s.length>34?s.slice(0,33)+'…':s};
  function rd(){const ws=[];for(const w of shuf(P)){if(!ws.some(x=>x.ru===w.ru||x.h===w.h))ws.push(w);if(ws.length===6)break}left=ws.length;sel=null;
-  put(topl('🧩 Пары · раунд '+(round+1)+'/'+R,C.g,'<b id="pt">'+Math.round((Date.now()-t0)/1000)+'</b> с · ошибок '+err)+`<div class="pairs"><div>${shuf(ws).map(w=>`<button class="pt z" data-a="p" data-s="l" data-id="${w.id}">${esc(w.h)}<small>${esc(w.p)}</small></button>`).join('')}</div><div>${shuf(ws).map(w=>`<button class="pt" data-a="p" data-s="r" data-id="${w.id}">${esc(sh(w.ru))}</button>`).join('')}</div></div>`,round>0)}
+  put(topl('🧩 Пары · раунд '+(round+1)+'/'+R,C.g,'<b id="pt">'+Math.round((Date.now()-t0)/1000)+'</b> с · ошибок '+err)+`<div class="pairs"><div>${shuf(ws).map(w=>`<button class="pt z" data-a="p" data-s="l" data-id="${w.id}">${esc(w.h)}<small>${esc(w.p)}</small></button>`).join('')}</div><div>${shuf(ws).map(w=>`<button class="pt" data-a="p" data-s="r" data-id="${w.id}"><span style="font-size:1.5em">${w.e}</span> ${esc(sh(w.ru))}</button>`).join('')}</div></div>`,round>0)}
  timer(()=>{const e=document.getElementById('pt');if(e)e.textContent=Math.round((Date.now()-t0)/1000)},1000);
  ACT.p=el=>{if(el.classList.contains('done'))return;if(el.dataset.s==='l')say(el.firstChild.textContent);
   if(!sel||sel.dataset.s===el.dataset.s){if(sel)sel.classList.remove('sel');sel=el;el.classList.add('sel');return}
