@@ -1,10 +1,10 @@
-/* Блок «HSK 6 экзамен»: словарь 5000 слов, игры, тренажёры по частям экзамена. Данные: hsk_words.json, hsk_exam.json */
+/* Блок «HSK 6 экзамен»: словарь 2500 слов HSK 6, игры, тренажёры по частям экзамена. Данные: hsk_words.json, hsk_exam.json */
 (function(){
 'use strict';
-const V='10';
+const V='11';
 let W=null,E=null,L6=[],BASE=[],loading=null,T=[],ACT={};
 let X={};try{X=JSON.parse(localStorage.getItem('hsk6x')||'{}')}catch(e){}
-X.b=X.b||{};X.d=X.d||{};X.xp=X.xp||0;X.rec=X.rec||{};X.pool=X.pool||'cur';X.days=X.days||{};X.sx=X.sx||{};
+X.b=X.b||{};X.d=X.d||{};X.xp=X.xp||0;X.rec=X.rec||{};X.pool=X.pool||'cur';if(X.pool==='base')X.pool='cur';X.days=X.days||{};X.sx=X.sx||{};
 const sv=()=>{try{localStorage.setItem('hsk6x',JSON.stringify(X))}catch(e){}};
 const dn=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5);
 const GAPS=[0,1,3,7,14,30],SZ=50;
@@ -59,8 +59,8 @@ const setW=n=>L6.slice(n*SZ,(n+1)*SZ);
 const seen=w=>X.b[w.id]!==undefined, kn=w=>X.b[w.id]>=1;
 function curSet(){for(let n=0;n*SZ<L6.length;n++)if(setW(n).some(w=>!kn(w)))return n;return 0}
 const dueList=()=>W.filter(w=>seen(w)&&(X.d[w.id]||0)<=dn());
-function pool(){let a=X.pool==='known'?L6.filter(kn):X.pool==='all'?L6:X.pool==='base'?BASE:setW(curSet());if(a.length<12)a=setW(curSet());return a}
-const poolName=()=>({cur:'набор '+(curSet()+1),known:'изученные',all:'весь HSK 6',base:'HSK 1–5'})[L6.filter(kn).length<12&&X.pool==='known'?'cur':X.pool];
+function pool(){let a=X.pool==='known'?L6.filter(kn):X.pool==='all'?L6:setW(curSet());if(a.length<12)a=setW(curSet());return a}
+const poolName=()=>({cur:'набор '+(curSet()+1),known:'изученные',all:'весь HSK 6'})[L6.filter(kn).length<12&&X.pool==='known'?'cur':X.pool];
 
 function nav(r){const c=history.state||{},d=c.v==='h'?(c.d||1)+1:1;try{history.pushState({v:'h',r:r,d:d},'')}catch(e){}render(r)}
 function render(r){stop();ACT={};const i=r.indexOf(':'),n=i<0?r:r.slice(0,i),a=i<0?'':r.slice(i+1);
@@ -87,10 +87,10 @@ VIEWS.hub=()=>{const k=L6.filter(kn).length,sn=L6.filter(seen).length,due=dueLis
  <div class="row"><button class="go" style="--c:#8E1B1B;flex:1;padding:13px" data-n="learn:${cs}">▶ Учить новые слова · набор ${cs+1}</button></div>
  <div class="row"><button class="go" style="--c:#3D7A4E;flex:1;padding:13px" data-n="review">🔁 Повторить, что пора · ${due}</button></div>
  <div class="sec">📚 Слова</div><div class="tiles">
- ${g('sets','Наборы HSK 6','2500 слов · 50 наборов по 50, от частых к редким',C.w)}${g('base','База HSK 1–5','2500 слов · список и проверка',C.w)}
- ${g('search','🔎 Поиск по словарю','5000 слов: 汉字, pinyin, русский, English',C.w,'wide')}</div>
+ ${g('sets','Наборы HSK 6','2500 слов · 50 наборов по 50, от частых к редким',C.w,'wide')}
+ ${g('search','🔎 Поиск по словарю','2500 слов HSK 6: 汉字, pinyin, русский, English',C.w,'wide')}</div>
  <div class="sec">🎮 Игры</div><div class="lbl">на каких словах играть</div>
- <div class="seg" style="flex-wrap:wrap;margin:4px 0 8px">${[['cur','Набор '+(cs+1)],['known','Изученные'],['all','Весь HSK 6'],['base','HSK 1–5']].map(p=>`<button data-a="pool" data-p="${p[0]}" class="${X.pool==p[0]?'on':''}">${p[1]}</button>`).join('')}</div>
+ <div class="seg" style="flex-wrap:wrap;margin:4px 0 8px">${[['cur','Набор '+(cs+1)],['known','Изученные'],['all','Весь HSK 6']].map(p=>`<button data-a="pool" data-p="${p[0]}" class="${X.pool==p[0]?'on':''}">${p[1]}</button>`).join('')}</div>
  <div class="tiles">${g('blitz','⚡ Блиц','20 слов, 8 секунд на ответ'+rc('blitz','/20'),C.g)}${g('pairs','🧩 Пары','соедините слово и перевод'+rc('pairs',' с'),C.g)}
  ${g('sprint','✅ Верно или нет','60 секунд на скорость'+rc('sprint'),C.g)}${g('tones','🎵 Тоны','выберите верный пиньинь'+rc('tones','/15'),C.g)}
  ${g('ear','👂 На слух','услышьте слово и найдите его'+rc('ear','/15'),C.g)}${g('wbuild','🔤 Собери слово','из иероглифов по переводу'+rc('wbuild','/10'),C.g)}
@@ -130,16 +130,12 @@ VIEWS.sets=()=>{let h=topl('Наборы HSK 6',C.w,'от частых слов 
 VIEWS.set=a=>{const n=+a||0,ws=setW(n);
  put(topl('Набор '+(n+1),C.w,'выучено '+ws.filter(kn).length+' из '+ws.length)+`<div class="row"><button class="go" style="--c:${C.w};flex:1" data-n="learn:${n}">▶ Учить по 10</button><button class="go" style="--c:${C.g};flex:1" data-n="blitz:${n}">⚡ Блиц по набору</button></div>
  <div class="lbl">нажмите на слово — прозвучит · зелёная полоска = выучено, жёлтая = в работе</div>`+ws.map(wrow).join(''));wordActs()};
-VIEWS.base=a=>{const l=+a||5,ws=BASE.filter(w=>w.l===l);
- put(topl('База HSK 1–5',C.w,ws.length+' слов')+`<div class="seg">${[1,2,3,4,5].map(i=>`<button data-a="lv" data-l="${i}" class="${i==l?'on':''}">HSK ${i}</button>`).join('')}</div>
- <div class="row" style="margin-top:8px"><button class="go" style="--c:${C.g};flex:1" data-n="blitz:b${l}">⚡ Проверить себя: 20 слов HSK ${l}</button></div>
- <div class="lbl">ошибки из проверки попадают в повторение</div>`+ws.map(wrow).join(''));wordActs();ACT.lv=el=>{try{history.replaceState({v:'h',r:'base:'+el.dataset.l,d:(history.state||{}).d||1},'')}catch(e){}VIEWS.base(el.dataset.l)}};
 VIEWS.search=()=>{put(`<input type="search" id="hq" placeholder="汉字, pinyin (можно без тонов), русский или English"><div id="hres"></div>`);
  const q=document.getElementById('hq'),res=document.getElementById('hres');const flat=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
  if(!W[0].f)W.forEach(w=>w.f=(w.h+'|'+flat(w.p)+'|'+w.ru+'|'+w.en).toLowerCase());
- const run=()=>{const t=flat(q.value.trim()).replace(/\s+/g,' ');if(!t){res.innerHTML='<div class="help">Введите слово. Найдёт по всем 5000 словам HSK 1–6.</div>';return}
+ const run=()=>{const t=flat(q.value.trim()).replace(/\s+/g,' ');if(!t){res.innerHTML='<div class="help">Введите слово. Найдёт по всем 2500 словам HSK 6.</div>';return}
   const t2=t.replace(/ /g,'');const it=W.filter(w=>w.f.includes(t)||w.f.includes(t2)).sort((a,b)=>a.h.length-b.h.length).slice(0,60);
-  res.innerHTML=it.length?it.map(w=>`<div class="li" style="--c:${C.w}"><span class="lbl" style="float:right">HSK ${w.l}</span>${wcard(w)}</div>`).join(''):'<div class="help">Ничего не найдено.</div>'};
+  res.innerHTML=it.length?it.map(w=>`<div class="li" style="--c:${C.w}">${wcard(w)}</div>`).join(''):'<div class="help">Ничего не найдено.</div>'};
  q.oninput=run;run();q.focus()};
 
 /* ── общий движок вопросов с вариантами */
