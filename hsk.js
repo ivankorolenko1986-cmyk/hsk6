@@ -1,7 +1,7 @@
 /* Блок «HSK 6 экзамен»: словарь 2500 слов HSK 6, игры, тренажёры по частям экзамена. Данные: hsk_words.json, hsk_exam.json */
 (function(){
 'use strict';
-const V='13';
+const V='14';
 let W=null,E=null,L6=[],BASE=[],loading=null,T=[],ACT={};
 let X={};try{X=JSON.parse(localStorage.getItem('hsk6x')||'{}')}catch(e){}
 X.b=X.b||{};X.d=X.d||{};X.xp=X.xp||0;X.rec=X.rec||{};X.pool=X.pool||'cur';if(X.pool==='base')X.pool='cur';X.days=X.days||{};X.sx=X.sx||{};
